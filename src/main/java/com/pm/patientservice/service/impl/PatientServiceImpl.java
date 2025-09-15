@@ -5,6 +5,7 @@ import com.pm.patientservice.dtos.PatientResponseDto;
 import com.pm.patientservice.dtos.PatientUpdateRequestDto;
 import com.pm.patientservice.enums.ResponseCode;
 import com.pm.patientservice.exception.*;
+import com.pm.patientservice.grpc.BillingServiceGrpcClient;
 import com.pm.patientservice.mapper.PatientMapper;
 import com.pm.patientservice.model.Patient;
 import com.pm.patientservice.repo.PatientRepo;
@@ -25,6 +26,7 @@ import java.util.UUID;
 public class PatientServiceImpl implements PatientService {
 
     private final PatientRepo patientRepo;
+    private final BillingServiceGrpcClient billingServiceGrpcClient;
 
     @Override
     public List<PatientResponseDto> getPatients() throws RetrivedFailedException {
@@ -52,6 +54,11 @@ public class PatientServiceImpl implements PatientService {
         try {
             Patient patient = PatientMapper.toPatient(patientRequestDto);
             Patient newPatient = patientRepo.save(patient);
+
+            billingServiceGrpcClient.createBillingAccount(
+                    newPatient.getId().toString(),
+                    newPatient.getName(),
+                    newPatient.getEmail());
 
             return PatientMapper.toDto(newPatient);
         } catch (Exception e) {
