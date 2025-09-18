@@ -6,6 +6,7 @@ import com.pm.patientservice.dtos.PatientUpdateRequestDto;
 import com.pm.patientservice.enums.ResponseCode;
 import com.pm.patientservice.exception.*;
 import com.pm.patientservice.grpc.BillingServiceGrpcClient;
+import com.pm.patientservice.kafka.kafkaProducer;
 import com.pm.patientservice.mapper.PatientMapper;
 import com.pm.patientservice.model.Patient;
 import com.pm.patientservice.repo.PatientRepo;
@@ -27,6 +28,7 @@ public class PatientServiceImpl implements PatientService {
 
     private final PatientRepo patientRepo;
     private final BillingServiceGrpcClient billingServiceGrpcClient;
+    private final kafkaProducer kafkaProducer;
 
     @Override
     public List<PatientResponseDto> getPatients() throws RetrivedFailedException {
@@ -59,6 +61,8 @@ public class PatientServiceImpl implements PatientService {
                     newPatient.getId().toString(),
                     newPatient.getName(),
                     newPatient.getEmail());
+
+            kafkaProducer.sendEvent(newPatient);
 
             return PatientMapper.toDto(newPatient);
         } catch (Exception e) {
